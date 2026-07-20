@@ -6,6 +6,12 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 
+// Enregistre les modèles Mongoose
+require('./models/User');
+require('./models/Asset');
+require('./models/Employee');
+require('./models/Assignment');
+
 const app = express();
 
 // Middlewares — DOIVENT être déclarés EN PREMIER
@@ -15,6 +21,15 @@ app.use(express.json());
 // Routes — déclarées APRÈS les middlewares
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
+
+const assetRoutes = require('./routes/assetRoutes');
+app.use('/api/assets', assetRoutes);
+
+const employeeRoutes = require('./routes/employeeRoutes');
+app.use('/api/employees', employeeRoutes);
+
+const assignmentRoutes = require('./routes/assignmentRoutes');
+app.use('/api/assignments', assignmentRoutes);
 
 // Route de test
 app.get('/', (req, res) => {
