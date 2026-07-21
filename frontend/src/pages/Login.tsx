@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
 function Login() {
@@ -54,6 +54,10 @@ function Login() {
           Login
         </button>
       </form>
+
+      <p style={{ marginTop: '15px' }}>
+        Don't have an account? <Link to="/signup">Sign Up</Link>
+      </p>
     </div>
   );
 }
