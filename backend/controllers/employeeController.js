@@ -67,10 +67,48 @@ const deleteEmployee = async (req, res) => {
   }
 };
 
+// @desc    Récupérer SA PROPRE fiche employee (liée par email)
+// @route   GET /api/employees/me
+const getMyEmployeeProfile = async (req, res) => {
+  try {
+    const employee = await Employee.findOne({ email: req.user.email });
+    if (!employee) {
+      return res.status(404).json({ message: 'No employee profile found yet' });
+    }
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Modifier SES PROPRES infos (department, position, phone)
+// @route   PUT /api/employees/me
+const updateMyEmployeeProfile = async (req, res) => {
+  try {
+    const { department, position, phone } = req.body;
+
+    const employee = await Employee.findOne({ email: req.user.email });
+    if (!employee) {
+      return res.status(404).json({ message: 'No employee profile found yet' });
+    }
+
+    if (department !== undefined) employee.department = department;
+    if (position !== undefined) employee.position = position;
+    if (phone !== undefined) employee.phone = phone;
+
+    await employee.save();
+    res.json(employee);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createEmployee,
   getEmployees,
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
+  getMyEmployeeProfile,
+  updateMyEmployeeProfile,
 };

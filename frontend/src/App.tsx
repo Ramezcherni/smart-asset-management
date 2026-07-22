@@ -2,7 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import Assets from './pages/Assets';
+import Employees from './pages/Employees';
 import Users from './pages/Users';
+import Profile from './pages/Profile';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -21,9 +24,28 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/assets" element={<h2>Assets page (à construire)</h2>} />
-          <Route path="/employees" element={<h2>Employees page (à construire)</h2>} />
-          <Route path="/users" element={<Users />} />
+
+          <Route path="/assets" element={<Assets />} />
+
+          <Route
+            path="/employees"
+            element={
+              <ProtectedRoute allowedRoles={['Admin', 'Technician']}>
+                <Employees />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <Users />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/profile" element={<Profile />} />
         </Route>
 
         <Route path="/" element={<Login />} />

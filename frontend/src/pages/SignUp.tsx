@@ -7,6 +7,9 @@ function SignUp() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [department, setDepartment] = useState('');
+  const [position, setPosition] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
@@ -21,7 +24,14 @@ function SignUp() {
     }
 
     try {
-      await api.post('/auth/register', { name, email, password });
+      await api.post('/auth/register', {
+        name,
+        email,
+        password,
+        department,
+        position,
+        phone,
+      });
       setSuccess(true);
       setTimeout(() => {
         navigate('/login');
@@ -32,7 +42,7 @@ function SignUp() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '100px auto' }}>
+    <div style={{ maxWidth: '450px', margin: '60px auto' }}>
       <h2>Sign Up</h2>
 
       {success ? (
@@ -84,6 +94,43 @@ function SignUp() {
               style={{ width: '100%', padding: '8px' }}
             />
           </div>
+
+          <hr style={{ margin: '15px 0' }} />
+          <p style={{ color: '#64748b', fontSize: '14px' }}>Additional information</p>
+
+          <div style={{ marginBottom: '10px' }}>
+            <label>Department</label>
+            <br />
+            <input
+              type="text"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              placeholder="e.g. IT, Sales, HR"
+              style={{ width: '100%', padding: '8px' }}
+            />
+          </div>
+          <div style={{ marginBottom: '10px' }}>
+            <label>Position</label>
+            <br />
+            <input
+              type="text"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              placeholder="e.g. Developer, Manager"
+              style={{ width: '100%', padding: '8px' }}
+            />
+          </div>
+          <div style={{ marginBottom: '10px' }}>
+            <label>Phone</label>
+            <br />
+            <input
+              type="text"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              style={{ width: '100%', padding: '8px' }}
+            />
+          </div>
+
           {error && <p style={{ color: 'red' }}>{error}</p>}
           <button type="submit" style={{ padding: '10px 20px' }}>
             Sign Up

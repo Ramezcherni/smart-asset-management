@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Employee = require('../models/Employee');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -8,11 +9,11 @@ const generateToken = (userId, role) => {
   });
 };
 
-// @desc    Inscription publique — TOUJOURS rôle Employee
+// @desc    Inscription publique — crée le compte ET la fiche Employee
 // @route   POST /api/auth/register
 const registerUser = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, department, position, phone } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
@@ -22,13 +23,29 @@ const registerUser = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Le rôle est TOUJOURS "Employee" ici, peu importe ce que le client envoie
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
       role: 'Employee',
     });
+
+    const nameParts = name.trim().split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || nameParts[0];
+
+    try {
+      await Employee.create({
+        firstName,
+        lastName,
+        email,
+        department: department || '',
+        position: position || '',
+        phone: phone || '',
+      });
+    } catch (empError) {
+      console.error('Failed to auto-create employee profile:', empError.message);
+    }
 
     res.status(201).json({
       _id: user._id,
@@ -142,10 +159,36 @@ const updateUserRole = async (req, res) => {
   }
 };
 
+// @desc    Modifier son propre profil (nom uniquement)
+// @route   PUT /api/auth/profile
+const updateProfile = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    await user.save();
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   registerUser,
   createUser,
   loginUser,
   getUsers,
   updateUserRole,
+  updateProfile,
 };

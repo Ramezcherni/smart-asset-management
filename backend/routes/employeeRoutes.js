@@ -6,11 +6,16 @@ const {
   getEmployeeById,
   updateEmployee,
   deleteEmployee,
+  getMyEmployeeProfile,
+  updateMyEmployeeProfile,
 } = require('../controllers/employeeController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
-// Toutes les routes nécessitent d'être connecté
 router.use(protect);
+
+// Routes "me" AVANT les routes avec :id
+router.get('/me', getMyEmployeeProfile);
+router.put('/me', updateMyEmployeeProfile);
 
 router.route('/')
   .get(getEmployees)

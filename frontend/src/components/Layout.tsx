@@ -11,6 +11,9 @@ function Layout() {
     navigate('/login');
   };
 
+  const isAdmin = user?.role === 'Admin';
+  const isTechnicianOrAdmin = user?.role === 'Admin' || user?.role === 'Technician';
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
@@ -25,9 +28,18 @@ function Layout() {
         <h3>Smart Asset Mgmt</h3>
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '30px' }}>
           <Link to="/dashboard" style={{ color: 'white' }}>Dashboard</Link>
+
           <Link to="/assets" style={{ color: 'white' }}>Assets</Link>
-          <Link to="/employees" style={{ color: 'white' }}>Employees</Link>
-          <Link to="/users" style={{ color: 'white' }}>Users</Link>
+
+          {isTechnicianOrAdmin && (
+            <Link to="/employees" style={{ color: 'white' }}>Employees</Link>
+          )}
+
+          {isAdmin && (
+            <Link to="/users" style={{ color: 'white' }}>Users</Link>
+          )}
+
+          <Link to="/profile" style={{ color: 'white' }}>My Profile</Link>
         </nav>
 
         <div style={{ marginTop: '50px', borderTop: '1px solid #334155', paddingTop: '15px' }}>
