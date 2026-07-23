@@ -21,6 +21,7 @@ function Profile() {
   const [phone, setPhone] = useState('');
 
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -46,6 +47,7 @@ function Profile() {
     e.preventDefault();
     setMessage('');
     setError('');
+    setSaving(true);
 
     try {
       const userRes = await api.put('/auth/profile', { name });
@@ -58,82 +60,130 @@ function Profile() {
       setMessage('Profile updated successfully!');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setSaving(false);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  const roleBadgeColor: Record<string, string> = {
+    Admin: 'bg-purple-100 text-purple-700',
+    Technician: 'bg-blue-100 text-blue-700',
+    Employee: 'bg-green-100 text-green-700',
+  };
+
+  if (loading) return <p className="text-slate-500">Loading...</p>;
 
   return (
-    <div style={{ maxWidth: '500px' }}>
-      <h1>My Profile</h1>
+    <div className="max-w-2xl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">My Profile</h1>
+        <p className="text-slate-500 text-sm mt-1">Manage your personal information</p>
+      </div>
 
-      <form onSubmit={handleSave} style={{ marginTop: '20px' }}>
-        <div style={{ marginBottom: '10px' }}>
-          <label>Full Name</label>
-          <br />
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            style={{ width: '100%', padding: '8px' }}
-          />
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        {/* Header avec avatar */}
+        <div className="flex items-center gap-4 pb-6 mb-6 border-b border-slate-200">
+          <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-semibold">
+            {name.charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <p className="text-lg font-semibold text-slate-900">{name}</p>
+            <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium mt-1 ${roleBadgeColor[role] || 'bg-slate-100 text-slate-700'}`}>
+              {role}
+            </span>
+          </div>
         </div>
 
-        <div style={{ marginBottom: '10px' }}>
-          <label>Email (cannot be changed)</label>
-          <br />
-          <input value={email} disabled style={{ width: '100%', padding: '8px', backgroundColor: '#e2e8f0' }} />
-        </div>
+        <form onSubmit={handleSave} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
-        <div style={{ marginBottom: '10px' }}>
-          <label>Role (cannot be changed)</label>
-          <br />
-          <input value={role} disabled style={{ width: '100%', padding: '8px', backgroundColor: '#e2e8f0' }} />
-        </div>
-
-        {hasEmployeeProfile ? (
-          <>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Department</label>
-              <br />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
               <input
-                value={department}
-                onChange={(e) => setDepartment(e.target.value)}
-                style={{ width: '100%', padding: '8px' }}
+                value={email}
+                disabled
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-500 bg-slate-50 cursor-not-allowed"
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Position</label>
-              <br />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
               <input
-                value={position}
-                onChange={(e) => setPosition(e.target.value)}
-                style={{ width: '100%', padding: '8px' }}
+                value={role}
+                disabled
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-slate-500 bg-slate-50 cursor-not-allowed"
               />
             </div>
-            <div style={{ marginBottom: '10px' }}>
-              <label>Phone</label>
-              <br />
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{ width: '100%', padding: '8px' }}
-              />
+          </div>
+
+          {hasEmployeeProfile ? (
+            <>
+              <div className="pt-4 mt-4 border-t border-slate-200">
+                <p className="text-sm font-medium text-slate-700 mb-3">Employee Information</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+                  <input
+                    value={department}
+                    onChange={(e) => setDepartment(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Position</label>
+                  <input
+                    value={position}
+                    onChange={(e) => setPosition(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 text-sm rounded-lg px-4 py-3">
+              Your employee profile hasn't been set up yet. Contact your Admin.
             </div>
-          </>
-        ) : (
-          <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>
-            Your employee profile hasn't been set up by an Admin yet. Contact your Admin.
-          </p>
-        )}
+          )}
 
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-        {error && <p style={{ color: 'red' }}>{error}</p>}
+          {message && (
+            <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-3 py-2">
+              {message}
+            </div>
+          )}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+              {error}
+            </div>
+          )}
 
-        <button type="submit" style={{ padding: '10px 20px' }}>
-          Save Changes
-        </button>
-      </form>
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white font-medium px-6 py-2.5 rounded-lg transition-colors"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

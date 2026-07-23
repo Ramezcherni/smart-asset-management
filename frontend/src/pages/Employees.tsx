@@ -1,23 +1,13 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
+interface User { _id: string; name: string; email: string; role: string; }
 interface Employee {
-  _id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  department?: string;
-  position?: string;
-  phone?: string;
-  status: string;
+  _id: string; firstName: string; lastName: string; email: string;
+  department?: string; position?: string; phone?: string; status: string;
 }
+const inputClass =
+  'w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 
 function Employees() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -46,58 +36,29 @@ function Employees() {
       setLoading(false);
     }
   };
-
   const fetchUsers = async () => {
-    try {
-      const response = await api.get('/auth/users');
-      setUsers(response.data);
-    } catch (err) {
-      console.error('Failed to load users', err);
-    }
+    try { const response = await api.get('/auth/users'); setUsers(response.data); }
+    catch (err) { console.error(err); }
   };
 
-  useEffect(() => {
-    fetchEmployees();
-    if (isAdmin) fetchUsers();
-  }, []);
+  useEffect(() => { fetchEmployees(); if (isAdmin) fetchUsers(); }, []);
 
-  // Exclut les users déjà transformés en fiche Employee (par email)
   const employeeEmails = employees.map((e) => e.email);
   const availableUsers = users.filter((u) => !employeeEmails.includes(u.email));
 
-  const resetForm = () => {
-    setSelectedUserId('');
-    setDepartment('');
-    setPosition('');
-    setPhone('');
-  };
+  const resetForm = () => { setSelectedUserId(''); setDepartment(''); setPosition(''); setPhone(''); };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
-
     const selectedUser = users.find((u) => u._id === selectedUserId);
-    if (!selectedUser) {
-      setFormError('Please select a user');
-      return;
-    }
-
+    if (!selectedUser) { setFormError('Please select a user'); return; }
     const nameParts = selectedUser.name.trim().split(' ');
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(' ') || nameParts[0];
-
     try {
-      await api.post('/employees', {
-        firstName,
-        lastName,
-        email: selectedUser.email,
-        department,
-        position,
-        phone,
-      });
-      resetForm();
-      setShowForm(false);
-      fetchEmployees();
+      await api.post('/employees', { firstName, lastName, email: selectedUser.email, department, position, phone });
+      resetForm(); setShowForm(false); fetchEmployees();
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'Failed to create employee');
     }
@@ -105,111 +66,93 @@ function Employees() {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this employee?')) return;
-    try {
-      await api.delete(`/employees/${id}`);
-      fetchEmployees();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete employee');
-    }
+    try { await api.delete(`/employees/${id}`); fetchEmployees(); }
+    catch (err: any) { alert(err.response?.data?.message || 'Failed to delete employee'); }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (loading) return <p className="text-slate-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Employees</h1>
+      <div className="flex justify-between items-center mb-1">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage employee records</p>
+        </div>
         {isAdmin && (
-          <button onClick={() => setShowForm(!showForm)} style={{ padding: '10px 15px' }}>
+          <button onClick={() => setShowForm(!showForm)} className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer">
             {showForm ? 'Cancel' : '+ Add Employee'}
           </button>
         )}
       </div>
 
       {showForm && (
-        <form
-          onSubmit={handleCreate}
-          style={{
-            backgroundColor: '#f8fafc',
-            padding: '20px',
-            borderRadius: '8px',
-            marginTop: '15px',
-            marginBottom: '20px',
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gap: '10px',
-          }}
-        >
-          <div style={{ gridColumn: '1 / -1' }}>
-            <label>Select existing account (User)</label>
-            <br />
-            <select
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              required
-              style={{ width: '100%', padding: '8px' }}
-            >
+        <form onSubmit={handleCreate} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-4 mb-6 grid grid-cols-2 gap-4">
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-slate-700 mb-1">Select existing account (User)</label>
+            <select value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} required className={inputClass}>
               <option value="">-- Choose a user --</option>
               {availableUsers.map((u) => (
-                <option key={u._id} value={u._id}>
-                  {u.name} ({u.email}) - {u.role}
-                </option>
+                <option key={u._id} value={u._id}>{u.name} ({u.email}) - {u.role}</option>
               ))}
             </select>
           </div>
           <div>
-            <label>Department</label>
-            <br />
-            <input value={department} onChange={(e) => setDepartment(e.target.value)} style={{ width: '100%', padding: '8px' }} />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Department</label>
+            <input value={department} onChange={(e) => setDepartment(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label>Position</label>
-            <br />
-            <input value={position} onChange={(e) => setPosition(e.target.value)} style={{ width: '100%', padding: '8px' }} />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Position</label>
+            <input value={position} onChange={(e) => setPosition(e.target.value)} className={inputClass} />
           </div>
           <div>
-            <label>Phone</label>
-            <br />
-            <input value={phone} onChange={(e) => setPhone(e.target.value)} style={{ width: '100%', padding: '8px' }} />
+            <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
+            <input value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
           </div>
-          {formError && <p style={{ color: 'red', gridColumn: '1 / -1' }}>{formError}</p>}
-          <button type="submit" style={{ padding: '10px 15px', gridColumn: '1 / -1', width: 'fit-content' }}>
-            Create Employee
-          </button>
+          {formError && <div className="col-span-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">{formError}</div>}
+          <div className="col-span-2">
+            <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer">
+              Create Employee
+            </button>
+          </div>
         </form>
       )}
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-            <th style={{ padding: '10px' }}>Name</th>
-            <th style={{ padding: '10px' }}>Email</th>
-            <th style={{ padding: '10px' }}>Department</th>
-            <th style={{ padding: '10px' }}>Position</th>
-            <th style={{ padding: '10px' }}>Status</th>
-            {isAdmin && <th style={{ padding: '10px' }}>Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {employees.map((emp) => (
-            <tr key={emp._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-              <td style={{ padding: '10px' }}>{emp.firstName} {emp.lastName}</td>
-              <td style={{ padding: '10px' }}>{emp.email}</td>
-              <td style={{ padding: '10px' }}>{emp.department || '-'}</td>
-              <td style={{ padding: '10px' }}>{emp.position || '-'}</td>
-              <td style={{ padding: '10px' }}>{emp.status}</td>
-              {isAdmin && (
-                <td style={{ padding: '10px' }}>
-                  <button onClick={() => handleDelete(emp._id)} style={{ color: 'red' }}>
-                    Delete
-                  </button>
-                </td>
-              )}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-6">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left bg-slate-50 border-b border-slate-200">
+              <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Email</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Department</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Position</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+              {isAdmin && <th className="px-4 py-3 font-semibold text-slate-700">Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {employees.map((emp) => (
+              <tr key={emp._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 text-slate-900 font-medium">{emp.firstName} {emp.lastName}</td>
+                <td className="px-4 py-3 text-slate-700">{emp.email}</td>
+                <td className="px-4 py-3 text-slate-700">{emp.department || '-'}</td>
+                <td className="px-4 py-3 text-slate-700">{emp.position || '-'}</td>
+                <td className="px-4 py-3">
+                  <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-700">{emp.status}</span>
+                </td>
+                {isAdmin && (
+                  <td className="px-4 py-3">
+                    <button onClick={() => handleDelete(emp._id)} className="text-red-600 hover:text-red-800 font-medium cursor-pointer">
+                      Delete
+                    </button>
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

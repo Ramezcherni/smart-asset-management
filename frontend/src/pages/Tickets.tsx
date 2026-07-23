@@ -9,10 +9,24 @@ interface Ticket {
   status: string;
   createdBy: { name: string; email: string };
   assignedTo?: { name: string; email: string } | null;
-  asset?: { name: string; serialNumber: string } | null;
   resolutionNotes?: string;
   createdAt: string;
 }
+
+const priorityColor: Record<string, string> = {
+  Low: 'bg-slate-100 text-slate-700',
+  Medium: 'bg-blue-100 text-blue-700',
+  High: 'bg-orange-100 text-orange-700',
+  Urgent: 'bg-red-100 text-red-700',
+};
+const statusColor: Record<string, string> = {
+  Open: 'bg-orange-100 text-orange-700',
+  'In Progress': 'bg-blue-100 text-blue-700',
+  Resolved: 'bg-green-100 text-green-700',
+  Closed: 'bg-slate-100 text-slate-600',
+};
+const inputClass =
+  'w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
 
 function Tickets() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -20,7 +34,6 @@ function Tickets() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  // Recherche et filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterPriority, setFilterPriority] = useState('All');
@@ -45,261 +58,163 @@ function Tickets() {
     }
   };
 
-  useEffect(() => {
-    fetchTickets();
-  }, []);
+  useEffect(() => { fetchTickets(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
     try {
       await api.post('/tickets', { title, description, priority });
-      setTitle('');
-      setDescription('');
-      setPriority('Medium');
-      setShowForm(false);
+      setTitle(''); setDescription(''); setPriority('Medium'); setShowForm(false);
       fetchTickets();
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'Failed to create ticket');
     }
   };
 
-  const handleAssignToMe = async (ticketId: string) => {
-    try {
-      await api.put(`/tickets/${ticketId}/assign`);
-      fetchTickets();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to assign ticket');
-    }
+  const handleAssignToMe = async (id: string) => {
+    try { await api.put(`/tickets/${id}/assign`); fetchTickets(); }
+    catch (err: any) { alert(err.response?.data?.message || 'Failed to assign ticket'); }
   };
-
-  const handleStatusChange = async (ticketId: string, status: string) => {
-    try {
-      await api.put(`/tickets/${ticketId}/status`, { status });
-      fetchTickets();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to update status');
-    }
+  const handleStatusChange = async (id: string, status: string) => {
+    try { await api.put(`/tickets/${id}/status`, { status }); fetchTickets(); }
+    catch (err: any) { alert(err.response?.data?.message || 'Failed to update status'); }
   };
-
-  const handleDelete = async (ticketId: string) => {
+  const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this ticket?')) return;
-    try {
-      await api.delete(`/tickets/${ticketId}`);
-      fetchTickets();
-    } catch (err: any) {
-      alert(err.response?.data?.message || 'Failed to delete ticket');
-    }
+    try { await api.delete(`/tickets/${id}`); fetchTickets(); }
+    catch (err: any) { alert(err.response?.data?.message || 'Failed to delete ticket'); }
   };
 
-  const priorityColor: Record<string, string> = {
-    Low: '#94a3b8',
-    Medium: '#3b82f6',
-    High: '#f97316',
-    Urgent: '#ef4444',
-  };
-
-  const statusColor: Record<string, string> = {
-    Open: '#f97316',
-    'In Progress': '#3b82f6',
-    Resolved: '#22c55e',
-    Closed: '#94a3b8',
-  };
-
-  // Applique la recherche + les filtres
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = filterStatus === 'All' || ticket.status === filterStatus;
-    const matchesPriority = filterPriority === 'All' || ticket.priority === filterPriority;
+  const filteredTickets = tickets.filter((t) => {
+    const matchesSearch = t.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || t.status === filterStatus;
+    const matchesPriority = filterPriority === 'All' || t.priority === filterPriority;
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (loading) return <p className="text-slate-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Maintenance Tickets</h1>
-        <button onClick={() => setShowForm(!showForm)} style={{ padding: '10px 15px' }}>
+      <div className="flex justify-between items-center mb-1">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Maintenance Tickets</h1>
+          <p className="text-slate-500 text-sm mt-1">Track and resolve equipment issues</p>
+        </div>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+        >
           {showForm ? 'Cancel' : '+ New Ticket'}
         </button>
       </div>
 
       {showForm && (
-        <form
-          onSubmit={handleCreate}
-          style={{
-            backgroundColor: '#f8fafc',
-            padding: '20px',
-            borderRadius: '8px',
-            marginTop: '15px',
-            marginBottom: '20px',
-          }}
-        >
-          <div style={{ marginBottom: '10px' }}>
-            <label>Title</label>
-            <br />
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              placeholder="e.g. Laptop won't turn on"
-              style={{ width: '100%', padding: '8px' }}
-            />
+        <form onSubmit={handleCreate} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-4 mb-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Title</label>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Laptop won't turn on" className={inputClass} />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Description</label>
-            <br />
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              rows={3}
-              style={{ width: '100%', padding: '8px' }}
-            />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+            <textarea value={description} onChange={(e) => setDescription(e.target.value)} required rows={3} className={inputClass} />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Priority</label>
-            <br />
-            <select value={priority} onChange={(e) => setPriority(e.target.value)} style={{ width: '100%', padding: '8px' }}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Priority</label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value)} className={inputClass}>
               <option value="Low">Low</option>
               <option value="Medium">Medium</option>
               <option value="High">High</option>
               <option value="Urgent">Urgent</option>
             </select>
           </div>
-          {formError && <p style={{ color: 'red' }}>{formError}</p>}
-          <button type="submit" style={{ padding: '10px 15px' }}>Submit Ticket</button>
+          {formError && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">{formError}</div>}
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer">
+            Submit Ticket
+          </button>
         </form>
       )}
 
-      {/* Barre de recherche et filtres */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          marginTop: '20px',
-          marginBottom: '10px',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="flex gap-3 mt-6 mb-3 flex-wrap">
         <input
-          type="text"
-          placeholder="Search by title..."
-          value={searchTerm}
+          type="text" placeholder="Search by title..." value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '8px', flex: '1', minWidth: '200px' }}
+          className={`${inputClass} flex-1 min-w-[220px]`}
         />
-
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '8px' }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={inputClass + ' w-auto'}>
           <option value="All">All Statuses</option>
           <option value="Open">Open</option>
           <option value="In Progress">In Progress</option>
           <option value="Resolved">Resolved</option>
           <option value="Closed">Closed</option>
         </select>
-
-        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '8px' }}>
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} className={inputClass + ' w-auto'}>
           <option value="All">All Priorities</option>
           <option value="Low">Low</option>
           <option value="Medium">Medium</option>
           <option value="High">High</option>
           <option value="Urgent">Urgent</option>
         </select>
-
         {(searchTerm || filterStatus !== 'All' || filterPriority !== 'All') && (
           <button
-            onClick={() => {
-              setSearchTerm('');
-              setFilterStatus('All');
-              setFilterPriority('All');
-            }}
-            style={{ padding: '8px 12px' }}
+            onClick={() => { setSearchTerm(''); setFilterStatus('All'); setFilterPriority('All'); }}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             Clear filters
           </button>
         )}
       </div>
 
-      <p style={{ color: '#64748b', fontSize: '14px' }}>
-        {filteredTickets.length} ticket{filteredTickets.length !== 1 ? 's' : ''} found
-      </p>
+      <p className="text-slate-500 text-sm mb-3">{filteredTickets.length} ticket{filteredTickets.length !== 1 ? 's' : ''} found</p>
 
-      <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {filteredTickets.length === 0 && <p>No tickets match your search/filters.</p>}
+      <div className="space-y-3">
+        {filteredTickets.length === 0 && <p className="text-slate-400 text-center py-8">No tickets match your search/filters.</p>}
 
         {filteredTickets.map((ticket) => (
-          <div
-            key={ticket._id}
-            style={{
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '15px',
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+          <div key={ticket._id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+            <div className="flex justify-between items-start gap-4">
               <div>
-                <h3 style={{ margin: 0 }}>{ticket.title}</h3>
-                <p style={{ margin: '5px 0', color: '#64748b' }}>{ticket.description}</p>
+                <h3 className="font-semibold text-slate-900">{ticket.title}</h3>
+                <p className="text-slate-500 text-sm mt-1">{ticket.description}</p>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <span
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '12px',
-                    backgroundColor: priorityColor[ticket.priority],
-                    color: 'white',
-                    fontSize: '12px',
-                  }}
-                >
-                  {ticket.priority}
-                </span>
-                <span
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '12px',
-                    backgroundColor: statusColor[ticket.status],
-                    color: 'white',
-                    fontSize: '12px',
-                  }}
-                >
-                  {ticket.status}
-                </span>
+              <div className="flex gap-2 shrink-0">
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${priorityColor[ticket.priority]}`}>{ticket.priority}</span>
+                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${statusColor[ticket.status]}`}>{ticket.status}</span>
               </div>
             </div>
 
-            <p style={{ fontSize: '13px', color: '#94a3b8', marginTop: '10px' }}>
+            <p className="text-xs text-slate-400 mt-3">
               Created by {ticket.createdBy?.name} on {new Date(ticket.createdAt).toLocaleDateString()}
               {ticket.assignedTo && ` — Assigned to ${ticket.assignedTo.name}`}
             </p>
 
             {ticket.resolutionNotes && (
-              <p style={{ fontSize: '13px', backgroundColor: '#f1f5f9', padding: '8px', borderRadius: '6px' }}>
-                <strong>Resolution:</strong> {ticket.resolutionNotes}
+              <p className="text-sm bg-slate-50 border border-slate-100 rounded-lg px-3 py-2 mt-3">
+                <strong className="text-slate-700">Resolution:</strong> <span className="text-slate-600">{ticket.resolutionNotes}</span>
               </p>
             )}
 
             {canManage && (
-              <div style={{ marginTop: '10px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="flex gap-2 flex-wrap mt-4 pt-4 border-t border-slate-100">
                 {!ticket.assignedTo && (
-                  <button onClick={() => handleAssignToMe(ticket._id)}>Assign to me</button>
+                  <button onClick={() => handleAssignToMe(ticket._id)} className="text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
+                    Assign to me
+                  </button>
                 )}
-
                 {ticket.status !== 'Resolved' && ticket.status !== 'Closed' && (
-                  <button onClick={() => handleStatusChange(ticket._id, 'Resolved')}>
+                  <button onClick={() => handleStatusChange(ticket._id, 'Resolved')} className="text-sm bg-green-600 hover:bg-green-700 text-white font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
                     Mark as Resolved
                   </button>
                 )}
-
                 {ticket.status !== 'Closed' && (
-                  <button onClick={() => handleStatusChange(ticket._id, 'Closed')}>
+                  <button onClick={() => handleStatusChange(ticket._id, 'Closed')} className="text-sm border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer">
                     Close
                   </button>
                 )}
-
                 {user?.role === 'Admin' && (
-                  <button onClick={() => handleDelete(ticket._id)} style={{ color: 'red' }}>
+                  <button onClick={() => handleDelete(ticket._id)} className="text-sm text-red-600 hover:text-red-800 font-medium px-3 py-1.5 cursor-pointer">
                     Delete
                   </button>
                 )}

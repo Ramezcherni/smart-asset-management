@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 
-interface User {
-  _id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+interface User { _id: string; name: string; email: string; role: string; }
+
+const roleBadge: Record<string, string> = {
+  Admin: 'bg-purple-100 text-purple-700',
+  Technician: 'bg-blue-100 text-blue-700',
+  Employee: 'bg-green-100 text-green-700',
+};
 
 function Users() {
   const [users, setUsers] = useState<User[]>([]);
@@ -25,18 +26,13 @@ function Users() {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  useEffect(() => { fetchUsers(); }, []);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     setUpdatingId(userId);
     try {
       await api.put(`/auth/users/${userId}/role`, { role: newRole });
-      // Met à jour la liste localement sans refaire un appel complet
-      setUsers((prev) =>
-        prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u))
-      );
+      setUsers((prev) => prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u)));
     } catch (err: any) {
       alert(err.response?.data?.message || 'Failed to update role');
     } finally {
@@ -44,42 +40,53 @@ function Users() {
     }
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (loading) return <p className="text-slate-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div>
-      <h1>User Management</h1>
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-            <th style={{ padding: '10px' }}>Name</th>
-            <th style={{ padding: '10px' }}>Email</th>
-            <th style={{ padding: '10px' }}>Role</th>
-            <th style={{ padding: '10px' }}>Change Role</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map((user) => (
-            <tr key={user._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-              <td style={{ padding: '10px' }}>{user.name}</td>
-              <td style={{ padding: '10px' }}>{user.email}</td>
-              <td style={{ padding: '10px' }}>{user.role}</td>
-              <td style={{ padding: '10px' }}>
-                <select
-                  value={user.role}
-                  disabled={updatingId === user._id}
-                  onChange={(e) => handleRoleChange(user._id, e.target.value)}
-                >
-                  <option value="Employee">Employee</option>
-                  <option value="Technician">Technician</option>
-                  <option value="Admin">Admin</option>
-                </select>
-              </td>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">User Management</h1>
+        <p className="text-slate-500 text-sm mt-1">Manage user accounts and roles</p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left bg-slate-50 border-b border-slate-200">
+              <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Email</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Role</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Change Role</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {users.map((user) => (
+              <tr key={user._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                <td className="px-4 py-3 text-slate-900 font-medium">{user.name}</td>
+                <td className="px-4 py-3 text-slate-700">{user.email}</td>
+                <td className="px-4 py-3">
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${roleBadge[user.role] || 'bg-slate-100 text-slate-600'}`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="px-4 py-3">
+                  <select
+                    value={user.role}
+                    disabled={updatingId === user._id}
+                    onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                    className="px-3 py-1.5 border border-slate-300 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="Employee">Employee</option>
+                    <option value="Technician">Technician</option>
+                    <option value="Admin">Admin</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

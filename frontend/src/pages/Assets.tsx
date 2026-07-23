@@ -17,6 +17,16 @@ interface Asset {
   assignedTo?: { _id: string; firstName: string; lastName: string } | null;
 }
 
+const statusStyles: Record<string, string> = {
+  Available: 'bg-green-100 text-green-700',
+  Assigned: 'bg-blue-100 text-blue-700',
+  'Under Maintenance': 'bg-amber-100 text-amber-700',
+  Retired: 'bg-slate-100 text-slate-600',
+};
+
+const inputClass =
+  'w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent';
+
 function Assets() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -24,19 +34,16 @@ function Assets() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
-  // Recherche et filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
 
-  // Formulaire de création
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Laptop');
   const [serialNumber, setSerialNumber] = useState('');
   const [location, setLocation] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Formulaire d'édition
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editAssignedToInput, setEditAssignedToInput] = useState('');
@@ -149,27 +156,30 @@ function Assets() {
     }
   };
 
-  // Applique la recherche + les filtres sur la liste
   const filteredAssets = assets.filter((asset) => {
     const matchesSearch =
       asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
-
     const matchesCategory = filterCategory === 'All' || asset.category === filterCategory;
     const matchesStatus = filterStatus === 'All' || asset.status === filterStatus;
-
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p style={{ color: 'red' }}>{error}</p>;
+  if (loading) return <p className="text-slate-500">Loading...</p>;
+  if (error) return <p className="text-red-600">{error}</p>;
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>Assets</h1>
+      <div className="flex justify-between items-center mb-1">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Assets</h1>
+          <p className="text-slate-500 text-sm mt-1">Manage your company equipment</p>
+        </div>
         {canManage && (
-          <button onClick={() => setShowForm(!showForm)} style={{ padding: '10px 15px' }}>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
             {showForm ? 'Cancel' : '+ Add Asset'}
           </button>
         )}
@@ -178,23 +188,15 @@ function Assets() {
       {showForm && (
         <form
           onSubmit={handleCreate}
-          style={{
-            backgroundColor: '#f8fafc',
-            padding: '20px',
-            borderRadius: '8px',
-            marginTop: '15px',
-            marginBottom: '20px',
-          }}
+          className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mt-4 mb-6 grid grid-cols-2 gap-4"
         >
-          <div style={{ marginBottom: '10px' }}>
-            <label>Name</label>
-            <br />
-            <input value={name} onChange={(e) => setName(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} required className={inputClass} />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Category</label>
-            <br />
-            <select value={category} onChange={(e) => setCategory(e.target.value)} style={{ width: '100%', padding: '8px' }}>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className={inputClass}>
               <option value="Laptop">Laptop</option>
               <option value="Desktop">Desktop</option>
               <option value="Monitor">Monitor</option>
@@ -203,40 +205,40 @@ function Assets() {
               <option value="Other">Other</option>
             </select>
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Serial Number</label>
-            <br />
-            <input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} required style={{ width: '100%', padding: '8px' }} />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Serial Number</label>
+            <input value={serialNumber} onChange={(e) => setSerialNumber(e.target.value)} required className={inputClass} />
           </div>
-          <div style={{ marginBottom: '10px' }}>
-            <label>Location</label>
-            <br />
-            <input value={location} onChange={(e) => setLocation(e.target.value)} style={{ width: '100%', padding: '8px' }} />
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Location</label>
+            <input value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} />
           </div>
-          {formError && <p style={{ color: 'red' }}>{formError}</p>}
-          <button type="submit" style={{ padding: '10px 15px' }}>Create Asset</button>
+          {formError && (
+            <div className="col-span-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-3 py-2">
+              {formError}
+            </div>
+          )}
+          <div className="col-span-2">
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Create Asset
+            </button>
+          </div>
         </form>
       )}
 
       {/* Barre de recherche et filtres */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          marginTop: '20px',
-          marginBottom: '10px',
-          flexWrap: 'wrap',
-        }}
-      >
+      <div className="flex gap-3 mt-6 mb-3 flex-wrap">
         <input
           type="text"
           placeholder="Search by name or serial number..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ padding: '8px', flex: '1', minWidth: '200px' }}
+          className={`${inputClass} flex-1 min-w-[220px]`}
         />
-
-        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} style={{ padding: '8px' }}>
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className={inputClass + ' w-auto'}>
           <option value="All">All Categories</option>
           <option value="Laptop">Laptop</option>
           <option value="Desktop">Desktop</option>
@@ -245,15 +247,13 @@ function Assets() {
           <option value="Phone">Phone</option>
           <option value="Other">Other</option>
         </select>
-
-        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '8px' }}>
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className={inputClass + ' w-auto'}>
           <option value="All">All Statuses</option>
           <option value="Available">Available</option>
           <option value="Assigned">Assigned</option>
           <option value="Under Maintenance">Under Maintenance</option>
           <option value="Retired">Retired</option>
         </select>
-
         {(searchTerm || filterCategory !== 'All' || filterStatus !== 'All') && (
           <button
             onClick={() => {
@@ -261,14 +261,14 @@ function Assets() {
               setFilterCategory('All');
               setFilterStatus('All');
             }}
-            style={{ padding: '8px 12px' }}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
             Clear filters
           </button>
         )}
       </div>
 
-      <p style={{ color: '#64748b', fontSize: '14px' }}>
+      <p className="text-slate-500 text-sm mb-3">
         {filteredAssets.length} asset{filteredAssets.length !== 1 ? 's' : ''} found
       </p>
 
@@ -278,71 +278,95 @@ function Assets() {
         ))}
       </datalist>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
-        <thead>
-          <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
-            <th style={{ padding: '10px' }}>Name</th>
-            <th style={{ padding: '10px' }}>Category</th>
-            <th style={{ padding: '10px' }}>Serial Number</th>
-            <th style={{ padding: '10px' }}>Status</th>
-            <th style={{ padding: '10px' }}>Assigned To</th>
-            {canManage && <th style={{ padding: '10px' }}>Actions</th>}
-          </tr>
-        </thead>
-        <tbody>
-          {filteredAssets.map((asset) => (
-            <tr key={asset._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
-              {editingAssetId === asset._id ? (
-                <>
-                  <td style={{ padding: '10px' }}>
-                    <input value={editName} onChange={(e) => setEditName(e.target.value)} />
-                  </td>
-                  <td style={{ padding: '10px' }}>{asset.category}</td>
-                  <td style={{ padding: '10px' }}>{asset.serialNumber}</td>
-                  <td style={{ padding: '10px' }}>{asset.status}</td>
-                  <td style={{ padding: '10px' }}>
-                    <input
-                      list="employee-list"
-                      value={editAssignedToInput}
-                      onChange={(e) => handleAssignedToInputChange(e.target.value)}
-                      placeholder="Search employee or leave empty"
-                      style={{ width: '100%', padding: '6px' }}
-                    />
-                  </td>
-                  <td style={{ padding: '10px' }}>
-                    <button onClick={() => handleSaveEdit(asset)}>Save</button>
-                    <button onClick={() => setEditingAssetId(null)}>Cancel</button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td style={{ padding: '10px' }}>{asset.name}</td>
-                  <td style={{ padding: '10px' }}>{asset.category}</td>
-                  <td style={{ padding: '10px' }}>{asset.serialNumber}</td>
-                  <td style={{ padding: '10px' }}>{asset.status}</td>
-                  <td style={{ padding: '10px' }}>
-                    {asset.assignedTo ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : '-'}
-                  </td>
-                  {canManage && (
-                    <td style={{ padding: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      <button onClick={() => startEdit(asset)}>Edit</button>
-                      {isAdmin && (
-                        <button onClick={() => handleDelete(asset._id)} style={{ color: 'red' }}>
-                          Delete
-                        </button>
-                      )}
-                    </td>
-                  )}
-                </>
-              )}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left bg-slate-50 border-b border-slate-200">
+              <th className="px-4 py-3 font-semibold text-slate-700">Name</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Category</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Serial Number</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">Assigned To</th>
+              {canManage && <th className="px-4 py-3 font-semibold text-slate-700">Actions</th>}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredAssets.map((asset) => (
+              <tr key={asset._id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                {editingAssetId === asset._id ? (
+                  <>
+                    <td className="px-4 py-2">
+                      <input value={editName} onChange={(e) => setEditName(e.target.value)} className={inputClass} />
+                    </td>
+                    <td className="px-4 py-2 text-slate-700">{asset.category}</td>
+                    <td className="px-4 py-2 text-slate-700">{asset.serialNumber}</td>
+                    <td className="px-4 py-2 text-slate-700">{asset.status}</td>
+                    <td className="px-4 py-2">
+                      <input
+                        list="employee-list"
+                        value={editAssignedToInput}
+                        onChange={(e) => handleAssignedToInputChange(e.target.value)}
+                        placeholder="Search employee..."
+                        className={inputClass}
+                      />
+                    </td>
+                    <td className="px-4 py-2 space-x-2 whitespace-nowrap">
+                      <button
+                        onClick={() => handleSaveEdit(asset)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingAssetId(null)}
+                        className="border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1.5 rounded-md transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="px-4 py-3 text-slate-900 font-medium">{asset.name}</td>
+                    <td className="px-4 py-3 text-slate-700">{asset.category}</td>
+                    <td className="px-4 py-3 text-slate-700">{asset.serialNumber}</td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${statusStyles[asset.status] || 'bg-slate-100 text-slate-600'}`}>
+                        {asset.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-slate-700">
+                      {asset.assignedTo ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : '-'}
+                    </td>
+                    {canManage && (
+                      <td className="px-4 py-3 space-x-3 whitespace-nowrap">
+                        <button
+                          onClick={() => startEdit(asset)}
+                          className="text-blue-600 hover:text-blue-800 font-medium cursor-pointer"
+                        >
+                          Edit
+                        </button>
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDelete(asset._id)}
+                            className="text-red-600 hover:text-red-800 font-medium cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        )}
+                      </td>
+                    )}
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
-      {filteredAssets.length === 0 && (
-        <p style={{ marginTop: '20px', color: '#94a3b8' }}>No assets match your search/filters.</p>
-      )}
+        {filteredAssets.length === 0 && (
+          <p className="text-center text-slate-400 py-8">No assets match your search/filters.</p>
+        )}
+      </div>
     </div>
   );
 }
