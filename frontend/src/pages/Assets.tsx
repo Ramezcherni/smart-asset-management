@@ -24,6 +24,11 @@ function Assets() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
+  // Recherche et filtres
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('All');
+  const [filterStatus, setFilterStatus] = useState('All');
+
   // Formulaire de création
   const [name, setName] = useState('');
   const [category, setCategory] = useState('Laptop');
@@ -31,11 +36,11 @@ function Assets() {
   const [location, setLocation] = useState('');
   const [formError, setFormError] = useState('');
 
-  // Formulaire d'édition (nom + assignation combinés)
+  // Formulaire d'édition
   const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [editAssignedToInput, setEditAssignedToInput] = useState(''); // texte tapé/affiché
-  const [editAssignedToId, setEditAssignedToId] = useState(''); // id réel choisi
+  const [editAssignedToInput, setEditAssignedToInput] = useState('');
+  const [editAssignedToId, setEditAssignedToId] = useState('');
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -104,7 +109,6 @@ function Assets() {
     }
   };
 
-  // Quand l'utilisateur tape/choisit un nom dans le champ de recherche
   const handleAssignedToInputChange = (value: string) => {
     setEditAssignedToInput(value);
     const match = employees.find((emp) => `${emp.firstName} ${emp.lastName}` === value);
@@ -113,23 +117,19 @@ function Assets() {
 
   const handleSaveEdit = async (asset: Asset) => {
     try {
-      // 1. Met à jour le nom si besoin
       if (editName !== asset.name) {
         await api.put(`/assets/${asset._id}`, { name: editName });
       }
 
       const currentAssignedId = asset.assignedTo?._id || '';
 
-      // 2. Gère le changement d'assignation
       if (editAssignedToId !== currentAssignedId) {
-        // Cas A : on retire l'assignation (champ vidé)
         if (!editAssignedToId && currentAssignedId) {
           const res = await api.get(`/assignments/asset/${asset._id}`);
           const active = res.data.find((a: any) => a.status === 'Active');
           if (active) await api.put(`/assignments/${active._id}/return`);
         }
 
-        // Cas B : l'asset était déjà assigné à quelqu'un d'autre → on retourne d'abord
         if (editAssignedToId && currentAssignedId) {
           const res = await api.get(`/assignments/asset/${asset._id}`);
           const active = res.data.find((a: any) => a.status === 'Active');
@@ -137,7 +137,6 @@ function Assets() {
           await api.post('/assignments', { asset: asset._id, employee: editAssignedToId });
         }
 
-        // Cas C : l'asset était libre → on assigne directement
         if (editAssignedToId && !currentAssignedId) {
           await api.post('/assignments', { asset: asset._id, employee: editAssignedToId });
         }
@@ -149,6 +148,18 @@ function Assets() {
       alert(err.response?.data?.message || 'Failed to save changes');
     }
   };
+
+  // Applique la recherche + les filtres sur la liste
+  const filteredAssets = assets.filter((asset) => {
+    const matchesSearch =
+      asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory = filterCategory === 'All' || asset.category === filterCategory;
+    const matchesStatus = filterStatus === 'All' || asset.status === filterStatus;
+
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
@@ -207,14 +218,67 @@ function Assets() {
         </form>
       )}
 
-      {/* Liste des employés pour la recherche (utilisée par le champ Assigned To en édition) */}
+      {/* Barre de recherche et filtres */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          marginTop: '20px',
+          marginBottom: '10px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Search by name or serial number..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '8px', flex: '1', minWidth: '200px' }}
+        />
+
+        <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} style={{ padding: '8px' }}>
+          <option value="All">All Categories</option>
+          <option value="Laptop">Laptop</option>
+          <option value="Desktop">Desktop</option>
+          <option value="Monitor">Monitor</option>
+          <option value="Printer">Printer</option>
+          <option value="Phone">Phone</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '8px' }}>
+          <option value="All">All Statuses</option>
+          <option value="Available">Available</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Under Maintenance">Under Maintenance</option>
+          <option value="Retired">Retired</option>
+        </select>
+
+        {(searchTerm || filterCategory !== 'All' || filterStatus !== 'All') && (
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setFilterCategory('All');
+              setFilterStatus('All');
+            }}
+            style={{ padding: '8px 12px' }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      <p style={{ color: '#64748b', fontSize: '14px' }}>
+        {filteredAssets.length} asset{filteredAssets.length !== 1 ? 's' : ''} found
+      </p>
+
       <datalist id="employee-list">
         {employees.map((emp) => (
           <option key={emp._id} value={`${emp.firstName} ${emp.lastName}`} />
         ))}
       </datalist>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '10px' }}>
         <thead>
           <tr style={{ textAlign: 'left', borderBottom: '2px solid #e2e8f0' }}>
             <th style={{ padding: '10px' }}>Name</th>
@@ -226,7 +290,7 @@ function Assets() {
           </tr>
         </thead>
         <tbody>
-          {assets.map((asset) => (
+          {filteredAssets.map((asset) => (
             <tr key={asset._id} style={{ borderBottom: '1px solid #e2e8f0' }}>
               {editingAssetId === asset._id ? (
                 <>
@@ -275,6 +339,10 @@ function Assets() {
           ))}
         </tbody>
       </table>
+
+      {filteredAssets.length === 0 && (
+        <p style={{ marginTop: '20px', color: '#94a3b8' }}>No assets match your search/filters.</p>
+      )}
     </div>
   );
 }

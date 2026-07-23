@@ -20,6 +20,11 @@ function Tickets() {
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
 
+  // Recherche et filtres
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterPriority, setFilterPriority] = useState('All');
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState('Medium');
@@ -101,6 +106,14 @@ function Tickets() {
     Closed: '#94a3b8',
   };
 
+  // Applique la recherche + les filtres
+  const filteredTickets = tickets.filter((ticket) => {
+    const matchesSearch = ticket.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'All' || ticket.status === filterStatus;
+    const matchesPriority = filterPriority === 'All' || ticket.priority === filterPriority;
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
+
   if (loading) return <p>Loading...</p>;
   if (error) return <p style={{ color: 'red' }}>{error}</p>;
 
@@ -161,10 +174,62 @@ function Tickets() {
         </form>
       )}
 
-      <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {tickets.length === 0 && <p>No tickets found.</p>}
+      {/* Barre de recherche et filtres */}
+      <div
+        style={{
+          display: 'flex',
+          gap: '10px',
+          marginTop: '20px',
+          marginBottom: '10px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <input
+          type="text"
+          placeholder="Search by title..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ padding: '8px', flex: '1', minWidth: '200px' }}
+        />
 
-        {tickets.map((ticket) => (
+        <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} style={{ padding: '8px' }}>
+          <option value="All">All Statuses</option>
+          <option value="Open">Open</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Resolved">Resolved</option>
+          <option value="Closed">Closed</option>
+        </select>
+
+        <select value={filterPriority} onChange={(e) => setFilterPriority(e.target.value)} style={{ padding: '8px' }}>
+          <option value="All">All Priorities</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+          <option value="Urgent">Urgent</option>
+        </select>
+
+        {(searchTerm || filterStatus !== 'All' || filterPriority !== 'All') && (
+          <button
+            onClick={() => {
+              setSearchTerm('');
+              setFilterStatus('All');
+              setFilterPriority('All');
+            }}
+            style={{ padding: '8px 12px' }}
+          >
+            Clear filters
+          </button>
+        )}
+      </div>
+
+      <p style={{ color: '#64748b', fontSize: '14px' }}>
+        {filteredTickets.length} ticket{filteredTickets.length !== 1 ? 's' : ''} found
+      </p>
+
+      <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {filteredTickets.length === 0 && <p>No tickets match your search/filters.</p>}
+
+        {filteredTickets.map((ticket) => (
           <div
             key={ticket._id}
             style={{
