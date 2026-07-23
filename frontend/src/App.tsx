@@ -6,6 +6,7 @@ import Assets from './pages/Assets';
 import Employees from './pages/Employees';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
+import Tickets from './pages/Tickets';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -26,6 +27,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
 
           <Route path="/assets" element={<Assets />} />
+
+          <Route path="/tickets" element={<Tickets />} />
 
           <Route
             path="/employees"

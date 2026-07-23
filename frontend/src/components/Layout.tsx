@@ -31,6 +31,8 @@ function Layout() {
 
           <Link to="/assets" style={{ color: 'white' }}>Assets</Link>
 
+          <Link to="/tickets" style={{ color: 'white' }}>Tickets</Link>
+
           {isTechnicianOrAdmin && (
             <Link to="/employees" style={{ color: 'white' }}>Employees</Link>
           )}
