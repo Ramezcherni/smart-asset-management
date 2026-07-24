@@ -21,6 +21,7 @@ function Layout() {
     { to: '/tickets', label: 'Tickets', icon: '🎫', show: true },
     { to: '/employees', label: 'Employees', icon: '👥', show: isTechnicianOrAdmin },
     { to: '/users', label: 'Users', icon: '🔑', show: isAdmin },
+    { to: '/audit-logs', label: 'Audit Logs', icon: '📋', show: isAdmin },
     { to: '/profile', label: 'My Profile', icon: '⚙️', show: true },
   ];
 
@@ -78,7 +79,7 @@ function Layout() {
           </div>
           <button
             onClick={handleLogout}
-            className="w-full text-sm bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg transition-colors"
+            className="w-full text-sm bg-slate-800 hover:bg-slate-700 text-white py-2 rounded-lg transition-colors cursor-pointer"
           >
             Logout
           </button>

@@ -12,6 +12,7 @@ require('./models/Asset');
 require('./models/Employee');
 require('./models/Assignment');
 require('./models/Ticket');
+require('./models/AuditLog');
 
 const app = express();
 
@@ -34,6 +35,9 @@ app.use('/api/assignments', assignmentRoutes);
 
 const ticketRoutes = require('./routes/ticketRoutes');
 app.use('/api/tickets', ticketRoutes);
+
+const auditLogRoutes = require('./routes/auditLogRoutes');
+app.use('/api/audit-logs', auditLogRoutes);
 
 // Route de test
 app.get('/', (req, res) => {

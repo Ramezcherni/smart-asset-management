@@ -2,6 +2,7 @@ const User = require('../models/User');
 const Employee = require('../models/Employee');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { logAction } = require('../utils/auditLogger');
 
 const generateToken = (userId, role) => {
   return jwt.sign({ id: userId, role }, process.env.JWT_SECRET, {
@@ -145,8 +146,17 @@ const updateUserRole = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    const oldRole = user.role;
     user.role = role;
     await user.save();
+
+    await logAction(
+      req.user._id,
+      'UPDATE_ROLE',
+      'User',
+      user._id,
+      `Changed ${user.name}'s role from ${oldRole} to ${role}`
+    );
 
     res.json({
       _id: user._id,

@@ -1,10 +1,12 @@
 const Asset = require('../models/Asset');
+const { logAction } = require('../utils/auditLogger');
 
 // @desc    Créer un nouvel asset
 // @route   POST /api/assets
 const createAsset = async (req, res) => {
   try {
     const asset = await Asset.create(req.body);
+    await logAction(req.user._id, 'CREATE', 'Asset', asset._id, `Created asset "${asset.name}"`);
     res.status(201).json(asset);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -47,6 +49,7 @@ const updateAsset = async (req, res) => {
     if (!asset) {
       return res.status(404).json({ message: 'Asset not found' });
     }
+    await logAction(req.user._id, 'UPDATE', 'Asset', asset._id, `Updated asset "${asset.name}"`);
     res.json(asset);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -61,6 +64,7 @@ const deleteAsset = async (req, res) => {
     if (!asset) {
       return res.status(404).json({ message: 'Asset not found' });
     }
+    await logAction(req.user._id, 'DELETE', 'Asset', asset._id, `Deleted asset "${asset.name}"`);
     res.json({ message: 'Asset deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });

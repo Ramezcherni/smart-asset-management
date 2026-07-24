@@ -1,4 +1,5 @@
 const Ticket = require('../models/Ticket');
+const { logAction } = require('../utils/auditLogger');
 
 // @desc    Créer un ticket
 // @route   POST /api/tickets
@@ -14,6 +15,8 @@ const createTicket = async (req, res) => {
       createdBy: req.user._id,
     });
 
+    await logAction(req.user._id, 'CREATE', 'Ticket', ticket._id, `Created ticket "${ticket.title}"`);
+
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')
       .populate('asset');
@@ -26,7 +29,6 @@ const createTicket = async (req, res) => {
 
 // @desc    Récupérer les tickets
 // @route   GET /api/tickets
-// Un Employee ne voit que SES tickets, Admin/Technician voient tout
 const getTickets = async (req, res) => {
   try {
     let filter = {};
@@ -59,7 +61,6 @@ const getTicketById = async (req, res) => {
       return res.status(404).json({ message: 'Ticket not found' });
     }
 
-    // Un Employee ne peut voir que ses propres tickets
     if (req.user.role === 'Employee' && ticket.createdBy._id.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: 'Not authorized to view this ticket' });
     }
@@ -82,6 +83,8 @@ const assignTicket = async (req, res) => {
     ticket.assignedTo = req.user._id;
     ticket.status = 'In Progress';
     await ticket.save();
+
+    await logAction(req.user._id, 'ASSIGN', 'Ticket', ticket._id, `Assigned ticket "${ticket.title}" to self`);
 
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')
@@ -112,6 +115,14 @@ const updateTicketStatus = async (req, res) => {
     ticket.status = status;
     if (resolutionNotes !== undefined) ticket.resolutionNotes = resolutionNotes;
     await ticket.save();
+
+    await logAction(
+      req.user._id,
+      'UPDATE_STATUS',
+      'Ticket',
+      ticket._id,
+      `Changed ticket "${ticket.title}" status to ${status}`
+    );
 
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')

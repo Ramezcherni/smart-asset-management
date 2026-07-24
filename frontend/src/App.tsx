@@ -7,6 +7,7 @@ import Employees from './pages/Employees';
 import Users from './pages/Users';
 import Profile from './pages/Profile';
 import Tickets from './pages/Tickets';
+import AuditLogs from './pages/AuditLogs';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -44,6 +45,15 @@ function App() {
             element={
               <ProtectedRoute allowedRoles={['Admin']}>
                 <Users />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/audit-logs"
+            element={
+              <ProtectedRoute allowedRoles={['Admin']}>
+                <AuditLogs />
               </ProtectedRoute>
             }
           />
