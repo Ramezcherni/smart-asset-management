@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { exportToPdf } from '../utils/pdfExport';
 
 interface Employee {
   _id: string;
@@ -165,6 +166,21 @@ function Assets() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  const handleExportPdf = () => {
+    exportToPdf({
+      title: 'Assets Report',
+      columns: ['Name', 'Category', 'Serial Number', 'Status', 'Assigned To'],
+      rows: filteredAssets.map((asset) => [
+        asset.name,
+        asset.category,
+        asset.serialNumber,
+        asset.status,
+        asset.assignedTo ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : '-',
+      ]),
+      fileName: `assets-report-${new Date().toISOString().split('T')[0]}.pdf`,
+    });
+  };
+
   if (loading) return <p className="text-slate-500">Loading...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
@@ -175,14 +191,22 @@ function Assets() {
           <h1 className="text-2xl font-bold text-slate-900">Assets</h1>
           <p className="text-slate-500 text-sm mt-1">Manage your company equipment</p>
         </div>
-        {canManage && (
+        <div className="flex gap-2">
           <button
-            onClick={() => setShowForm(!showForm)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            onClick={handleExportPdf}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
-            {showForm ? 'Cancel' : '+ Add Asset'}
+            📄 Export PDF
           </button>
-        )}
+          {canManage && (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              {showForm ? 'Cancel' : '+ Add Asset'}
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (
@@ -229,7 +253,6 @@ function Assets() {
         </form>
       )}
 
-      {/* Barre de recherche et filtres */}
       <div className="flex gap-3 mt-6 mb-3 flex-wrap">
         <input
           type="text"
