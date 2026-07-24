@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
+import { exportToPdf } from '../utils/pdfExport';
 
 interface Ticket {
   _id: string;
@@ -93,6 +94,22 @@ function Tickets() {
     return matchesSearch && matchesStatus && matchesPriority;
   });
 
+  const handleExportPdf = () => {
+    exportToPdf({
+      title: 'Maintenance Tickets Report',
+      columns: ['Title', 'Priority', 'Status', 'Created By', 'Assigned To', 'Date'],
+      rows: filteredTickets.map((ticket) => [
+        ticket.title,
+        ticket.priority,
+        ticket.status,
+        ticket.createdBy?.name || '-',
+        ticket.assignedTo?.name || '-',
+        new Date(ticket.createdAt).toLocaleDateString(),
+      ]),
+      fileName: `tickets-report-${new Date().toISOString().split('T')[0]}.pdf`,
+    });
+  };
+
   if (loading) return <p className="text-slate-500">Loading...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
@@ -103,12 +120,20 @@ function Tickets() {
           <h1 className="text-2xl font-bold text-slate-900">Maintenance Tickets</h1>
           <p className="text-slate-500 text-sm mt-1">Track and resolve equipment issues</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
-        >
-          {showForm ? 'Cancel' : '+ New Ticket'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportPdf}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            📄 Export PDF
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            {showForm ? 'Cancel' : '+ New Ticket'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
