@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { exportToPdf } from '../utils/pdfExport';
+import { exportToExcel } from '../utils/excelExport';
 import QrCodeModal from '../components/QrCodeModal';
 
 interface Employee {
@@ -183,6 +184,21 @@ function Assets() {
     });
   };
 
+  const handleExportExcel = () => {
+    exportToExcel({
+      sheetName: 'Assets',
+      columns: ['Name', 'Category', 'Serial Number', 'Status', 'Assigned To'],
+      rows: filteredAssets.map((asset) => [
+        asset.name,
+        asset.category,
+        asset.serialNumber,
+        asset.status,
+        asset.assignedTo ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : '-',
+      ]),
+      fileName: `assets-report-${new Date().toISOString().split('T')[0]}.xlsx`,
+    });
+  };
+
   if (loading) return <p className="text-slate-500">Loading...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
@@ -198,7 +214,13 @@ function Assets() {
             onClick={handleExportPdf}
             className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
-            📄 Export PDF
+            📄 PDF
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            📊 Excel
           </button>
           {canManage && (
             <button

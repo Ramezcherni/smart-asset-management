@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { exportToPdf } from '../utils/pdfExport';
+import { exportToExcel } from '../utils/excelExport';
 
 interface Ticket {
   _id: string;
@@ -110,6 +111,22 @@ function Tickets() {
     });
   };
 
+  const handleExportExcel = () => {
+    exportToExcel({
+      sheetName: 'Tickets',
+      columns: ['Title', 'Priority', 'Status', 'Created By', 'Assigned To', 'Date'],
+      rows: filteredTickets.map((ticket) => [
+        ticket.title,
+        ticket.priority,
+        ticket.status,
+        ticket.createdBy?.name || '-',
+        ticket.assignedTo?.name || '-',
+        new Date(ticket.createdAt).toLocaleDateString(),
+      ]),
+      fileName: `tickets-report-${new Date().toISOString().split('T')[0]}.xlsx`,
+    });
+  };
+
   if (loading) return <p className="text-slate-500">Loading...</p>;
   if (error) return <p className="text-red-600">{error}</p>;
 
@@ -125,7 +142,13 @@ function Tickets() {
             onClick={handleExportPdf}
             className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
-            📄 Export PDF
+            📄 PDF
+          </button>
+          <button
+            onClick={handleExportExcel}
+            className="border border-slate-300 hover:bg-slate-100 text-slate-700 font-medium px-4 py-2 rounded-lg transition-colors cursor-pointer"
+          >
+            📊 Excel
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
