@@ -1,5 +1,7 @@
 const Ticket = require('../models/Ticket');
+const User = require('../models/User');
 const { logAction } = require('../utils/auditLogger');
+const { notifyUser } = require('../utils/notify');
 
 // @desc    Créer un ticket
 // @route   POST /api/tickets
@@ -16,6 +18,12 @@ const createTicket = async (req, res) => {
     });
 
     await logAction(req.user._id, 'CREATE', 'Ticket', ticket._id, `Created ticket "${ticket.title}"`);
+
+    // Notifie tous les Admin/Technician
+    const staff = await User.find({ role: { $in: ['Admin', 'Technician'] } });
+    for (const member of staff) {
+      await notifyUser(member._id, `New ticket: "${ticket.title}" (${ticket.priority})`, '/tickets');
+    }
 
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')
@@ -86,6 +94,12 @@ const assignTicket = async (req, res) => {
 
     await logAction(req.user._id, 'ASSIGN', 'Ticket', ticket._id, `Assigned ticket "${ticket.title}" to self`);
 
+    await notifyUser(
+      ticket.createdBy,
+      `${req.user.name} is now working on your ticket "${ticket.title}"`,
+      '/tickets'
+    );
+
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')
       .populate('assignedTo', 'name email')
@@ -123,6 +137,8 @@ const updateTicketStatus = async (req, res) => {
       ticket._id,
       `Changed ticket "${ticket.title}" status to ${status}`
     );
+
+    await notifyUser(ticket.createdBy, `Your ticket "${ticket.title}" is now ${status}`, '/tickets');
 
     const populatedTicket = await Ticket.findById(ticket._id)
       .populate('createdBy', 'name email')

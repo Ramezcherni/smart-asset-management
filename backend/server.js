@@ -4,6 +4,8 @@ dns.setServers(['8.8.8.8', '8.8.4.4']);
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 // Enregistre les modèles Mongoose
@@ -13,14 +15,37 @@ require('./models/Employee');
 require('./models/Assignment');
 require('./models/Ticket');
 require('./models/AuditLog');
+require('./models/Notification');
 
 const app = express();
+const server = http.createServer(app);
 
-// Middlewares — DOIVENT être déclarés EN PREMIER
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+// Injecte l'instance io dans le helper de notifications
+const { setIo } = require('./utils/notify');
+setIo(io);
+
+// Gère la connexion des utilisateurs au socket
+io.on('connection', (socket) => {
+  socket.on('join', (userId) => {
+    socket.join(userId);
+  });
+
+  socket.on('disconnect', () => {
+    // rien de spécial à faire ici pour l'instant
+  });
+});
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Routes — déclarées APRÈS les middlewares
+// Routes
 const authRoutes = require('./routes/authRoutes');
 app.use('/api/auth', authRoutes);
 
@@ -39,18 +64,18 @@ app.use('/api/tickets', ticketRoutes);
 const auditLogRoutes = require('./routes/auditLogRoutes');
 app.use('/api/audit-logs', auditLogRoutes);
 
-// Route de test
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/api/notifications', notificationRoutes);
+
 app.get('/', (req, res) => {
   res.send('API is running...');
 });
 
-// Connexion à MongoDB
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB connected ✅'))
   .catch((err) => console.log('MongoDB connection error ❌', err));
 
-// Lancement du serveur
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

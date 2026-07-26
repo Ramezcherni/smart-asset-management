@@ -1,4 +1,5 @@
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
+import NotificationBell from './NotificationBell';
 
 function Layout() {
   const navigate = useNavigate();
@@ -35,8 +36,9 @@ function Layout() {
     <div className="flex min-h-screen bg-slate-50">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white flex flex-col">
-        <div className="px-6 py-6 border-b border-slate-800">
+        <div className="px-6 py-6 border-b border-slate-800 flex justify-between items-center">
           <h1 className="text-lg font-bold tracking-tight">Smart Asset Mgmt</h1>
+          <NotificationBell />
         </div>
 
         <nav className="flex-1 px-3 py-6 space-y-1">
