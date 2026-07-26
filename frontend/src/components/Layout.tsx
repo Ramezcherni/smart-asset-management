@@ -1,9 +1,11 @@
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import NotificationBell from './NotificationBell';
+import { useTheme } from '../context/ThemeContext';
 
 function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isDark, toggleTheme } = useTheme();
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
 
@@ -28,18 +30,27 @@ function Layout() {
   ];
 
   const roleBadgeColor: Record<string, string> = {
-    Admin: 'bg-purple-100 text-purple-700',
-    Technician: 'bg-blue-100 text-blue-700',
-    Employee: 'bg-green-100 text-green-700',
+    Admin: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+    Technician: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+    Employee: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900 text-white flex flex-col">
         <div className="px-6 py-6 border-b border-slate-800 flex justify-between items-center">
           <h1 className="text-lg font-bold tracking-tight">Smart Asset Mgmt</h1>
-          <NotificationBell />
+          <div className="flex items-center gap-1">
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 flex items-center justify-center rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+              title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              <span className="text-lg">{isDark ? '☀️' : '🌙'}</span>
+            </button>
+            <NotificationBell />
+          </div>
         </div>
 
         <nav className="flex-1 px-3 py-6 space-y-1">
