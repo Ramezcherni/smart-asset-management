@@ -8,6 +8,7 @@ import Users from './pages/Users';
 import Profile from './pages/Profile';
 import Tickets from './pages/Tickets';
 import AuditLogs from './pages/AuditLogs';
+import ScanQr from './pages/ScanQr';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -26,10 +27,9 @@ function App() {
           }
         >
           <Route path="/dashboard" element={<Dashboard />} />
-
           <Route path="/assets" element={<Assets />} />
-
           <Route path="/tickets" element={<Tickets />} />
+          <Route path="/scan-qr" element={<ScanQr />} />
 
           <Route
             path="/employees"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../services/api';
 import { exportToPdf } from '../utils/pdfExport';
+import QrCodeModal from '../components/QrCodeModal';
 
 interface Employee {
   _id: string;
@@ -34,6 +35,7 @@ function Assets() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [qrAsset, setQrAsset] = useState<Asset | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -310,6 +312,7 @@ function Assets() {
               <th className="px-4 py-3 font-semibold text-slate-700">Serial Number</th>
               <th className="px-4 py-3 font-semibold text-slate-700">Status</th>
               <th className="px-4 py-3 font-semibold text-slate-700">Assigned To</th>
+              <th className="px-4 py-3 font-semibold text-slate-700">QR</th>
               {canManage && <th className="px-4 py-3 font-semibold text-slate-700">Actions</th>}
             </tr>
           </thead>
@@ -333,6 +336,7 @@ function Assets() {
                         className={inputClass}
                       />
                     </td>
+                    <td className="px-4 py-2">-</td>
                     <td className="px-4 py-2 space-x-2 whitespace-nowrap">
                       <button
                         onClick={() => handleSaveEdit(asset)}
@@ -360,6 +364,14 @@ function Assets() {
                     </td>
                     <td className="px-4 py-3 text-slate-700">
                       {asset.assignedTo ? `${asset.assignedTo.firstName} ${asset.assignedTo.lastName}` : '-'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => setQrAsset(asset)}
+                        className="text-slate-600 hover:text-slate-900 font-medium cursor-pointer"
+                      >
+                        QR
+                      </button>
                     </td>
                     {canManage && (
                       <td className="px-4 py-3 space-x-3 whitespace-nowrap">
@@ -390,6 +402,14 @@ function Assets() {
           <p className="text-center text-slate-400 py-8">No assets match your search/filters.</p>
         )}
       </div>
+
+      {qrAsset && (
+        <QrCodeModal
+          assetName={qrAsset.name}
+          serialNumber={qrAsset.serialNumber}
+          onClose={() => setQrAsset(null)}
+        />
+      )}
     </div>
   );
 }

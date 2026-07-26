@@ -20,6 +20,7 @@ function Layout() {
     { to: '/dashboard', label: 'Dashboard', icon: '📊', show: true },
     { to: '/assets', label: 'Assets', icon: '💻', show: true },
     { to: '/tickets', label: 'Tickets', icon: '🎫', show: true },
+    { to: '/scan-qr', label: 'Scan QR', icon: '📷', show: true },
     { to: '/employees', label: 'Employees', icon: '👥', show: isTechnicianOrAdmin },
     { to: '/users', label: 'Users', icon: '🔑', show: isAdmin },
     { to: '/audit-logs', label: 'Audit Logs', icon: '📋', show: isAdmin },
